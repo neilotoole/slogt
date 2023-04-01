@@ -1,6 +1,7 @@
 package slogt_test
 
 import (
+	"io"
 	"os"
 	"strconv"
 	"testing"
@@ -47,14 +48,46 @@ func TestSlogt_Pretty(t *testing.T) {
 			log := slogt.New(t)
 			for j := 0; j < iter; j++ {
 				t.Log("testing.T: this is indented as expected.")
-				log.Info("slogt: hello")
 
-				log2 := log.With("count", j)
-				log2.Info("slogt: hello with attrs")
+				log.Debug("slogt: debug")
+				log.Info("slogt: info")
+				log = log.With("count", j)
+				log.Info("slogt: info with attrs")
 
 				// Sleep a little to allow the goroutines to interleave.
 				time.Sleep(sleep)
 			}
 		})
 	}
+}
+
+func TestLogLevels(t *testing.T) {
+	log := slogt.New(t)
+	log.Debug("debug me")
+	log.Info("info me")
+	log.Warn("warn me")
+	log.Error("error me")
+}
+
+func TestText(t *testing.T) {
+	log := slogt.New(t, slogt.Text())
+	log.Info("info me")
+}
+
+func TestJSON(t *testing.T) {
+	log := slogt.New(t, slogt.JSON())
+	log.Info("info me")
+}
+
+func TestFactory(t *testing.T) {
+	// This factory returns a slog.Handler using slog.LevelError.
+	f := slogt.Factory(func(w io.Writer) slog.Handler {
+		return slog.HandlerOptions{
+			Level: slog.LevelError,
+		}.NewTextHandler(w)
+	})
+
+	log := slogt.New(t, f)
+	log.Info("Should NOT be printed because level is too low")
+	log.Error("Should be printed because level is sufficiently high")
 }

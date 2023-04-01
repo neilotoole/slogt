@@ -26,6 +26,33 @@ func TestSomething(t *testing.T) {
 }
 ```
 
+The default output is text, i.e. a `slog.TextHandler.` You can
+specify JSON using the `slogt.JSON()` option.
+
+```go
+func TestSomething(t *testing.T) {
+	log := slogt.New(t, slogt.JSON())
+
+	log.Info("hello world")
+}
+```
+
+And you get full control over the handler using `slogt.Factory()`.
+
+```go
+func TestSomething(T *testing.T) {
+// This factory returns a slog.Handler using slog.LevelError.
+f := slogt.Factory(func(w io.Writer) slog.Handler {
+    return slog.HandlerOptions{
+        Level: slog.LevelError,
+    }.NewTextHandler(w)
+})
+
+log := slogt.New(t, f)
+}
+```
+
+
 ## Deficiency
 
 Calling `t.Log()` prints the callsite. However, given the available functionality
