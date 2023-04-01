@@ -12,18 +12,14 @@ import (
 
 var _ slog.Handler = (*Handler)(nil)
 
-type factoryFunc func(io.Writer) slog.Handler
-
-func newHandler(t testing.TB) *Handler {
-	return &Handler{
+// New returns a new *slog.Logger that whose logging methods
+// pipe output to t.Log.
+func New(t testing.TB) *slog.Logger {
+	h := &Handler{
 		t:   t,
 		buf: &bytes.Buffer{},
 		mu:  &sync.Mutex{},
 	}
-}
-
-func New(t testing.TB) *slog.Logger {
-	h := newHandler(t)
 
 	// TODO: Apply opts
 
