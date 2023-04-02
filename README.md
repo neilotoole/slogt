@@ -88,6 +88,14 @@ Produces:
     logger.go:230: {"time":"2023-04-01T11:14:12.164085-06:00","level":"INFO","msg":"hello world"}
 ```
 
+To switch the default handler:
+
+```go
+func init() {
+    slogt.DefaultHandler = slogt.JSON	
+}
+```
+
 You can exercise full control over the handler using `slogt.Factory()`.
 
 ```go

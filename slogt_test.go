@@ -115,3 +115,9 @@ func TestCaller(t *testing.T) {
 	log := slogt.New(t, f)
 	log.Info("Show me the real callsite")
 }
+
+func TestDefaultHandler(t *testing.T) {
+	slogt.Default = slogt.JSON()
+	log := slogt.New(t)
+	log.Info("should show json")
+}

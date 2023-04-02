@@ -14,11 +14,15 @@ import (
 
 var _ slog.Handler = (*Bridge)(nil)
 
+// Default sets the default handler. This
+// can be changed by the client.
+var Default = Text()
+
 // Option is a functional option type that is used
 // with New to configure the logger's underlying handler.
 type Option func(b *Bridge)
 
-// Text specifies a text handler. This is the default.
+// Text specifies a text handler.
 //
 //	log := slogt.New(t, slogt.Text())
 func Text() Option {
@@ -68,8 +72,8 @@ func New(t testing.TB, opts ...Option) *slog.Logger {
 	}
 
 	if h.Handler == nil {
-		// No handler set yet, use the default text handler.
-		Text()(h)
+		// No handler set yet, use the default handler.
+		Default(h)
 	}
 
 	return slog.New(h)
@@ -104,7 +108,7 @@ func (b *Bridge) Handle(ctx context.Context, rec slog.Record) error {
 	output = bytes.TrimSuffix(output, []byte("\n"))
 
 	// Add calldepth. But it won't be enough, and the internal slog
-	// callsite will be printed.
+	// callsite will be printed. See discussion in README.md.
 	b.t.Helper()
 
 	b.t.Log(string(output))
