@@ -69,6 +69,24 @@ Produces:
     logger.go:230: time=2023-04-01T11:14:53.073-06:00 level=INFO msg="hello world"
 ```
 
+In practice, you would pass the `*slog.Logger` returned from `slogt.New` to
+the component under test. For example:
+
+```go
+func TestApp(t *testing.T) {
+  log := slogt.New(t)
+  
+  app := app.New(log, ...) // other dependencies
+
+  result, err := app.DepositMoney(100)
+  require.NoError(t, err)
+  require.Equal(t, 100, result.Balance)
+}
+```
+
+If the `app.DepositMoney` method logs anything, its output will be piped
+to `t.Log` as desired. 
+
 ### Options
 
 The default output is text, i.e. a `slog.TextHandler.` You can
