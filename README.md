@@ -5,7 +5,7 @@ and [`golang.org/x/exp/slog`](https://pkg.go.dev/golang.org/x/exp/slog).
 
 
 The problem: when tests execute, your `slog` output goes directly to `stdout`,
-unlike a call to `t.Log`, is correlated with your test's execution.
+unlike a call to `t.Log`, which is correlated with your test's execution.
 
 ```go
 func TestSlog_Ugly(t *testing.T) {
