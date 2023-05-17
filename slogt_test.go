@@ -18,7 +18,7 @@ const (
 )
 
 func TestSlog_Ugly(t *testing.T) {
-	log := slog.New(slog.NewTextHandler(os.Stdout))
+	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	t.Log("I am indented correctly")
 	log.Info("But I am not")
 }
@@ -37,7 +37,7 @@ func TestSlog_Ugly_Parallel(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			t.Parallel()
 
-			handler := slog.NewTextHandler(os.Stdout)
+			handler := slog.NewTextHandler(os.Stdout, nil)
 			log := slog.New(handler)
 
 			for j := 0; j < iter; j++ {
@@ -95,9 +95,9 @@ func TestJSON(t *testing.T) {
 func TestFactory(t *testing.T) {
 	// This factory returns a slog.Handler using slog.LevelError.
 	f := slogt.Factory(func(w io.Writer) slog.Handler {
-		return slog.HandlerOptions{
+		return slog.NewTextHandler(w, &slog.HandlerOptions{
 			Level: slog.LevelError,
-		}.NewTextHandler(w)
+		})
 	})
 
 	log := slogt.New(t, f)
@@ -107,9 +107,9 @@ func TestFactory(t *testing.T) {
 
 func TestCaller(t *testing.T) {
 	f := slogt.Factory(func(w io.Writer) slog.Handler {
-		return slog.HandlerOptions{
+		return slog.NewTextHandler(w, &slog.HandlerOptions{
 			AddSource: true,
-		}.NewTextHandler(w)
+		})
 	})
 
 	log := slogt.New(t, f)
