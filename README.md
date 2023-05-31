@@ -9,9 +9,9 @@ unlike a call to `t.Log`, which is correlated with your test's execution.
 
 ```go
 func TestSlog_Ugly(t *testing.T) {
-	log := slog.New(slog.NewTextHandler(os.Stdout))
-	t.Log("I am indented correctly")
-	log.Info("But I am not")
+   log := slog.New(slog.NewTextHandler(os.Stdout, nil))
+   t.Log("I am indented correctly")
+   log.Info("But I am not")
 }
 ```
 
