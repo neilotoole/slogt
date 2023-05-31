@@ -27,12 +27,12 @@ type Option func(b *Bridge)
 //	log := slogt.New(t, slogt.Text())
 func Text() Option {
 	return func(b *Bridge) {
-		hOpts := slog.HandlerOptions{
+		hOpts := &slog.HandlerOptions{
 			AddSource: false,
 			Level:     slog.LevelDebug,
 		}
 		// The opts may have already set the handler.
-		b.Handler = hOpts.NewTextHandler(b.buf)
+		b.Handler = slog.NewTextHandler(b.buf, hOpts)
 	}
 }
 
@@ -41,12 +41,12 @@ func Text() Option {
 //	log := slogt.New(t, slogt.JSON())
 func JSON() Option {
 	return func(b *Bridge) {
-		hOpts := slog.HandlerOptions{
+		hOpts := &slog.HandlerOptions{
 			AddSource: false,
 			Level:     slog.LevelDebug,
 		}
 		// The opts may have already set the handler.
-		b.Handler = hOpts.NewJSONHandler(b.buf)
+		b.Handler = slog.NewJSONHandler(b.buf, hOpts)
 	}
 }
 
