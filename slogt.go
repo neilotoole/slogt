@@ -32,7 +32,7 @@ func Text() Option {
 			Level:     slog.LevelDebug,
 		}
 		// The opts may have already set the handler.
-		b.Handler = hOpts.NewTextHandler(b.buf)
+		b.Handler = slog.NewTextHandler(b.buf, &hOpts)
 	}
 }
 
@@ -46,7 +46,7 @@ func JSON() Option {
 			Level:     slog.LevelDebug,
 		}
 		// The opts may have already set the handler.
-		b.Handler = hOpts.NewJSONHandler(b.buf)
+		b.Handler = slog.NewJSONHandler(b.buf, &hOpts)
 	}
 }
 
