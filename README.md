@@ -118,17 +118,17 @@ You can exercise full control over the handler using `slogt.Factory()`.
 
 ```go
 func TestSomething(T *testing.T) {
-   // This factory returns a slog.Handler using slog.LevelError.
-   f := slogt.Factory(func(w io.Writer) slog.Handler {
-       return slog.HandlerOptions{
+    // This factory returns a slog.Handler using slog.LevelError.
+    f := slogt.Factory(func(w io.Writer) slog.Handler {
+       opts := &slog.HandlerOptions{
            Level: slog.LevelError,
-       }.NewTextHandler(w)
-   })
-   
-   log := slogt.New(t, f)
+       }
+       return slog.NewTextHandler(w, opts)
+    })
+
+    log := slogt.New(t, f)
 }
 ```
-
 
 ## Deficiency
 
@@ -167,9 +167,11 @@ see the correct callsite alongside the incorrect one, you can do this:
 ```go
 func TestCaller(t *testing.T) {
 	f := slogt.Factory(func(w io.Writer) slog.Handler {
-		return slog.HandlerOptions{
+		opts := &slog.HandlerOptions{
 			AddSource: true,
-		}.NewTextHandler(w)
+		}
+
+		return slog.NewTextHandler(w, opts)
 	})
 
 	log := slogt.New(t, f)
