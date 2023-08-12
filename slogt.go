@@ -6,10 +6,9 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"log/slog"
 	"sync"
 	"testing"
-
-	"golang.org/x/exp/slog"
 )
 
 var _ slog.Handler = (*Bridge)(nil)
