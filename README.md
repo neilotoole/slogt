@@ -1,7 +1,7 @@
 # slogt
 
 `slogt` is a bridge between Go stdlib [`testing`](https://pkg.go.dev/testing) pkg
-and [`golang.org/x/exp/slog`](https://pkg.go.dev/golang.org/x/exp/slog).
+and [`log/slog`](https://pkg.go.dev/golang.org/log/slog).
 
 
 The problem: when tests execute, your `slog` output goes directly to `stdout`,

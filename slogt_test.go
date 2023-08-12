@@ -2,14 +2,13 @@ package slogt_test
 
 import (
 	"io"
+	"log/slog"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/neilotoole/slogt"
-
-	"golang.org/x/exp/slog"
 )
 
 const (
