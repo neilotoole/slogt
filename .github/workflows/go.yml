@@ -29,3 +29,18 @@ jobs:
 
     - name: Test
       run: go test -race -v ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: "stable"
+
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v9
+      with:
+        version: v2.12.2

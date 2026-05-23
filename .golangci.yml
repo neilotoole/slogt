@@ -1,0 +1,15 @@
+version: "2"
+
+# Standard linters (errcheck, govet, ineffassign, staticcheck, unused) plus a
+# few high-value extras. Kept deliberately modest for a small library.
+linters:
+  default: standard
+  enable:
+    - gocritic
+    - misspell
+    - revive
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
