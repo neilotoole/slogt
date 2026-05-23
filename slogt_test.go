@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neilotoole/slogt"
+	"github.com/neilotoole/slogt/v2"
 )
 
 const (
@@ -32,14 +32,14 @@ func TestSlogt_Pretty(t *testing.T) {
 // ugly when using t.Parallel(), because
 // the slog.Logger output is not tied to the testing.T.
 func TestSlog_Ugly_Parallel(t *testing.T) {
-	for i := 0; i < iter; i++ {
+	for i := range iter {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			t.Parallel()
 
 			handler := slog.NewTextHandler(os.Stdout, nil)
 			log := slog.New(handler)
 
-			for j := 0; j < iter; j++ {
+			for j := range iter {
 				t.Log("YAY: this is indented as expected.")
 				log := log.With("count", j)
 				log.Info("BOO: This, alas, is not indented.")
@@ -53,12 +53,12 @@ func TestSlog_Ugly_Parallel(t *testing.T) {
 
 // TestSlogt_Pretty demonstrates use of slog with testing.T.
 func TestSlogt_Pretty_Parallel(t *testing.T) {
-	for i := 0; i < iter; i++ {
+	for i := range iter {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			t.Parallel()
 
 			log := slogt.New(t)
-			for j := 0; j < iter; j++ {
+			for j := range iter {
 				t.Log("testing.T: this is indented as expected.")
 
 				log.Debug("slogt: debug")
@@ -119,7 +119,9 @@ func TestCaller(t *testing.T) {
 }
 
 func TestDefaultHandler(t *testing.T) {
-	slogt.Default = slogt.JSON()
+	t.Cleanup(func() { slogt.SetDefault(slogt.Text()) })
+
+	slogt.SetDefault(slogt.JSON())
 	log := slogt.New(t)
 	log.Info("should show json")
 }
