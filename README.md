@@ -132,6 +132,30 @@ func TestSomething(T *testing.T) {
 
 ## Deficiency
 
+> [!NOTE]
+> **Update (Go 1.25):** This deficiency directly motivated
+> [golang/go#59928](https://github.com/golang/go/issues/59928), which was accepted
+> and shipped in Go 1.25 as [`testing.TB.Output()`](https://pkg.go.dev/testing#T.Output).
+> `Output` returns an `io.Writer` that writes to the test log _without_ prepending a
+> source location, so writing to `t.Output()` instead of `t.Log()` avoids the bogus
+> callsite entirely. Combined with `AddSource: true` on the handler, the _correct_
+> callsite is then reported as a `source=` attribute.
+>
+> The original issue (by [@earthboundkid](https://github.com/earthboundkid)):
+>
+> > In a test, you often want to mock out the logger. It would be nice to be able to
+> > call t.Slog() and get a log/slog logger that send output to t.Log() with the
+> > correct caller information.
+> >
+> > See https://github.com/neilotoole/slogt for an example of a third party library
+> > providing this functionality, but note that it cannot provide correct caller
+> > information:
+> >
+> > > Alas, given the available functionality on testing.T (i.e. the Helper method),
+> > > and how slog is implemented, there's no way to have the correct callsite printed.
+> >
+> > It seems like this needs to be done on the Go side to fix the callsite.
+
 Calling `t.Log()` prints the callsite as the first element
 of each log statement (`logger.go:230` in the example below).
 
