@@ -136,3 +136,18 @@ func TestSetDefault_raceSafe(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestSetDefault_nilResetsToText(t *testing.T) {
+	t.Cleanup(func() { SetDefault(Text()) })
+
+	SetDefault(nil) // a nil opt must reset to Text(), not store nil
+
+	// A no-op option leaves c.newHandler unset, so newLog falls back to the
+	// package default, which must be a working Text() handler, not a nil panic.
+	var buf bytes.Buffer
+	newLog(&buf, func(*config) {}).Info("hello")
+
+	if got := buf.String(); !strings.HasPrefix(got, "time=") {
+		t.Fatalf("default after SetDefault(nil) should produce text output, got: %q", got)
+	}
+}
