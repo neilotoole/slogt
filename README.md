@@ -1,5 +1,9 @@
 # slogt
 
+[![Go](https://github.com/neilotoole/slogt/actions/workflows/go.yml/badge.svg)](https://github.com/neilotoole/slogt/actions/workflows/go.yml)
+[![codecov](https://codecov.io/gh/neilotoole/slogt/graph/badge.svg)](https://codecov.io/gh/neilotoole/slogt)
+[![Go Reference](https://pkg.go.dev/badge/github.com/neilotoole/slogt/v2.svg)](https://pkg.go.dev/github.com/neilotoole/slogt/v2)
+
 `slogt` is a bridge between Go stdlib [`testing`](https://pkg.go.dev/testing) pkg
 and [`log/slog`](https://pkg.go.dev/log/slog).
 
