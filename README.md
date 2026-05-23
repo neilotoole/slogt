@@ -206,7 +206,7 @@ caller is available via `AddSource: true` (see [Showing the caller](#showing-the
 
 ## Changelog
 
-### v2.0.0 (2026-05-23)
+### [v2.0.0](https://github.com/neilotoole/slogt/releases/tag/v2.0.0) (2026-05-23)
 
 - **Breaking:** require Go 1.25 and route output through
   [`testing.TB.Output()`](https://pkg.go.dev/testing#T.Output), eliminating the
