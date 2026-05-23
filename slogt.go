@@ -106,7 +106,7 @@ func (b *Bridge) Handle(ctx context.Context, rec slog.Record) error {
 	// trim before feeding to t.Log.
 	output = bytes.TrimSuffix(output, []byte("\n"))
 
-	// Add calldepth. But it won't be enough, and the internal slog
+	// Append calldepth. But it won't be enough, and the internal slog
 	// callsite will be printed. See discussion in README.md.
 	b.t.Helper()
 
