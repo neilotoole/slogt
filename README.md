@@ -56,8 +56,9 @@ Run `go get` as per procedure:
 go get -u github.com/neilotoole/slogt/v2
 ```
 
-slogt v2 requires **Go 1.25 or later** (it routes output through
-[`testing.TB.Output()`](https://pkg.go.dev/testing#T.Output)).
+> [!NOTE]
+> `slogt/v2` requires **Go 1.25 or later** (it routes output through
+> [`testing.TB.Output`](https://pkg.go.dev/testing#T.Output)).
 
 Then, use `slogt.New` to get a `*slog.Logger` that you can
 use as you normally would.
