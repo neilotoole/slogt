@@ -1,37 +1,59 @@
-// Package slogt implements a bridge between stdlib testing pkg and
-// the slog logging library. Use slogt.New(t) to get a *slog.Logger.
+// Package slogt bridges Go's stdlib testing package and the log/slog
+// logging library: slogt.New(t) returns a *slog.Logger whose output is
+// routed to t.Output(), so log lines are correlated with the running test.
 package slogt
 
 import (
-	"bytes"
-	"context"
 	"io"
 	"log/slog"
 	"sync"
 	"testing"
 )
 
-var _ slog.Handler = (*Bridge)(nil)
+var (
+	defaultMu     sync.RWMutex
+	defaultOption = Text()
+)
 
-// Default sets the default handler. This
-// can be changed by the client.
-var Default = Text()
+// SetDefault sets the Option that New applies when it is called without a
+// handler Option. The initial default is Text(). SetDefault is safe for
+// concurrent use; a nil opt resets the default to Text().
+func SetDefault(opt Option) {
+	if opt == nil {
+		opt = Text()
+	}
+	defaultMu.Lock()
+	defaultOption = opt
+	defaultMu.Unlock()
+}
+
+// getDefault returns the current default Option.
+func getDefault() Option {
+	defaultMu.RLock()
+	defer defaultMu.RUnlock()
+	return defaultOption
+}
 
 // Option is a functional option type that is used
 // with New to configure the logger's underlying handler.
-type Option func(b *Bridge)
+type Option func(c *config)
+
+// config holds the resolved handler constructor used by New.
+type config struct {
+	newHandler func(w io.Writer) slog.Handler
+}
 
 // Text specifies a text handler.
 //
 //	log := slogt.New(t, slogt.Text())
 func Text() Option {
-	return func(b *Bridge) {
-		hOpts := &slog.HandlerOptions{
-			AddSource: false,
-			Level:     slog.LevelDebug,
+	return func(c *config) {
+		c.newHandler = func(w io.Writer) slog.Handler {
+			return slog.NewTextHandler(w, &slog.HandlerOptions{
+				AddSource: false,
+				Level:     slog.LevelDebug,
+			})
 		}
-		// The opts may have already set the handler.
-		b.Handler = slog.NewTextHandler(b.buf, hOpts)
 	}
 }
 
@@ -39,98 +61,38 @@ func Text() Option {
 //
 //	log := slogt.New(t, slogt.JSON())
 func JSON() Option {
-	return func(b *Bridge) {
-		hOpts := &slog.HandlerOptions{
-			AddSource: false,
-			Level:     slog.LevelDebug,
+	return func(c *config) {
+		c.newHandler = func(w io.Writer) slog.Handler {
+			return slog.NewJSONHandler(w, &slog.HandlerOptions{
+				AddSource: false,
+				Level:     slog.LevelDebug,
+			})
 		}
-		// The opts may have already set the handler.
-		b.Handler = slog.NewJSONHandler(b.buf, hOpts)
 	}
 }
 
-// Factory is specifies a custom factory function for
+// Factory specifies a custom factory function for
 // creating the logger's underlying handler.
 func Factory(fn func(w io.Writer) slog.Handler) Option {
-	return func(b *Bridge) {
-		b.Handler = fn(b.buf)
+	return func(c *config) {
+		c.newHandler = fn
 	}
 }
 
-// New returns a new *slog.Logger whose logging methods
-// pipe output to t.Log.
+// New returns a new *slog.Logger whose output is routed to t.Output()
+// (added in Go 1.25). Output is correlated with the test like t.Log, but
+// carries no bogus callsite prefix. Set AddSource: true on the handler to
+// surface the real caller as a source= attribute.
 func New(t testing.TB, opts ...Option) *slog.Logger {
-	h := &Bridge{
-		t:   t,
-		buf: &bytes.Buffer{},
-		mu:  &sync.Mutex{},
-	}
-
+	c := &config{}
 	for _, opt := range opts {
-		opt(h)
+		opt(c)
 	}
 
-	if h.Handler == nil {
-		// No handler set yet, use the default handler.
-		Default(h)
+	if c.newHandler == nil {
+		// No handler set yet, use the default.
+		getDefault()(c)
 	}
 
-	return slog.New(h)
-}
-
-// Bridge is an implementation of slog.Handler that works
-// with the stdlib testing pkg.
-type Bridge struct {
-	slog.Handler
-	t   testing.TB
-	buf *bytes.Buffer
-	mu  *sync.Mutex
-}
-
-// Handle implements slog.Handler.
-func (b *Bridge) Handle(ctx context.Context, rec slog.Record) error {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-
-	err := b.Handler.Handle(ctx, rec)
-	if err != nil {
-		return err
-	}
-
-	output, err := io.ReadAll(b.buf)
-	if err != nil {
-		return err
-	}
-
-	// The output comes back with a newline, which we need to
-	// trim before feeding to t.Log.
-	output = bytes.TrimSuffix(output, []byte("\n"))
-
-	// Append calldepth. But it won't be enough, and the internal slog
-	// callsite will be printed. See discussion in README.md.
-	b.t.Helper()
-
-	b.t.Log(string(output))
-
-	return nil
-}
-
-// WithAttrs implements slog.Handler.
-func (b *Bridge) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &Bridge{
-		t:       b.t,
-		buf:     b.buf,
-		mu:      b.mu,
-		Handler: b.Handler.WithAttrs(attrs),
-	}
-}
-
-// WithGroup implements slog.Handler.
-func (b *Bridge) WithGroup(name string) slog.Handler {
-	return &Bridge{
-		t:       b.t,
-		buf:     b.buf,
-		mu:      b.mu,
-		Handler: b.Handler.WithGroup(name),
-	}
+	return slog.New(c.newHandler(t.Output()))
 }

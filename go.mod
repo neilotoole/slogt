@@ -1,4 +1,3 @@
-module github.com/neilotoole/slogt
+module github.com/neilotoole/slogt/v2
 
-go 1.21
-
+go 1.25

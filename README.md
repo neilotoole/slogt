@@ -1,7 +1,7 @@
 # slogt
 
 `slogt` is a bridge between Go stdlib [`testing`](https://pkg.go.dev/testing) pkg
-and [`log/slog`](https://pkg.go.dev/golang.org/log/slog).
+and [`log/slog`](https://pkg.go.dev/log/slog).
 
 
 The problem: when tests execute, your `slog` output goes directly to `stdout`,
@@ -19,7 +19,7 @@ Produces:
 
 ```text
 === RUN   TestSlog_Ugly
-    slogt_test.go:22: I am indented correctly
+    slogt_test.go:21: I am indented correctly
 time=2023-04-01T11:29:27.236-06:00 level=INFO msg="But I am not"
 ```
 
@@ -39,8 +39,8 @@ Produces:
 
 ```text
 === RUN   TestSlogt_Pretty
-    slogt_test.go:28: I am indented correctly
-    logger.go:230: time=2023-04-01T11:33:06.342-06:00 level=INFO msg="And so am I"
+    slogt_test.go:27: I am indented correctly
+    time=2026-05-23T10:00:00.000-06:00 level=INFO msg="And so am I"
 ```
 
 
@@ -49,7 +49,7 @@ Produces:
 Run `go get` as per procedure:
 
 ```shell
-go get -u github.com/neilotoole/slogt
+go get -u github.com/neilotoole/slogt/v2
 ```
 
 Then, use `slogt.New` to get a `*slog.Logger` that you can
@@ -66,7 +66,7 @@ Produces:
 
 ```text
 === RUN   TestText
-    logger.go:230: time=2023-04-01T11:14:53.073-06:00 level=INFO msg="hello world"
+    time=2026-05-23T10:00:00.000-06:00 level=INFO msg="hello world"
 ```
 
 In practice, you would pass the `*slog.Logger` returned from `slogt.New` to
@@ -84,8 +84,8 @@ func TestApp(t *testing.T) {
 }
 ```
 
-If the `app.DepositMoney` method logs anything, its output will be piped
-to `t.Log` as desired. 
+If the `app.DepositMoney` method logs anything, its output is routed to
+`t.Output()` and correlated with the running test.
 
 ### Options
 
@@ -103,21 +103,21 @@ Produces:
 
 ```text
 === RUN   TestJSON
-    logger.go:230: {"time":"2023-04-01T11:14:12.164085-06:00","level":"INFO","msg":"hello world"}
+    {"time":"2026-05-23T10:00:00.000-06:00","level":"INFO","msg":"hello world"}
 ```
 
 To switch the default handler:
 
 ```go
 func init() {
-    slogt.DefaultHandler = slogt.JSON	
+    slogt.SetDefault(slogt.JSON())
 }
 ```
 
 You can exercise full control over the handler using `slogt.Factory()`.
 
 ```go
-func TestSomething(T *testing.T) {
+func TestSomething(t *testing.T) {
     // This factory returns a slog.Handler using slog.LevelError.
     f := slogt.Factory(func(w io.Writer) slog.Handler {
        opts := &slog.HandlerOptions{
@@ -130,63 +130,10 @@ func TestSomething(T *testing.T) {
 }
 ```
 
-## Deficiency
+### Showing the caller
 
-> [!NOTE]
-> **Update (Go 1.25):** This deficiency directly motivated
-> [golang/go#59928](https://github.com/golang/go/issues/59928), which was accepted
-> and shipped in Go 1.25 as [`testing.TB.Output()`](https://pkg.go.dev/testing#T.Output).
-> `Output` returns an `io.Writer` that writes to the test log _without_ prepending a
-> source location, so writing to `t.Output()` instead of `t.Log()` avoids the bogus
-> callsite entirely. Combined with `AddSource: true` on the handler, the _correct_
-> callsite is then reported as a `source=` attribute.
->
-> The original issue (by [@earthboundkid](https://github.com/earthboundkid)):
->
-> > In a test, you often want to mock out the logger. It would be nice to be able to
-> > call t.Slog() and get a log/slog logger that send output to t.Log() with the
-> > correct caller information.
-> >
-> > See https://github.com/neilotoole/slogt for an example of a third party library
-> > providing this functionality, but note that it cannot provide correct caller
-> > information:
-> >
-> > > Alas, given the available functionality on testing.T (i.e. the Helper method),
-> > > and how slog is implemented, there's no way to have the correct callsite printed.
-> >
-> > It seems like this needs to be done on the Go side to fix the callsite.
-
-Calling `t.Log()` prints the callsite as the first element
-of each log statement (`logger.go:230` in the example below).
-
-```text
-=== RUN   TestText
-    logger.go:230: time=2023-04-01T11:14:53.073-06:00 level=INFO msg="hello world"
-```
-
-But `logger.go:230` is actually in the internals of `slog` package.
-What we really want to see is the location of the caller of, say, `log.Info()`.
-
-Alas, given the available functionality
-on `testing.T` (i.e. the `Helper` method), and how `slog` is implemented,
-there's no way to have the correct callsite printed.
-
-There are a number of ways this could be fixed:
-
-1. The Go team could implement a `testing.NewLogger(t)` function that effectively
-   does what this package does, but it would have access to the `testing.T`'s
-   internal state, and so could manipulate the calldepth.
-2. The `testing.T` type could expose a `HelperN(depth int)` method that allows
-   logging libraries and the like to manipulate the calldepth further. This would
-   be generically useful even independent of this particular case.
-3. The `slog` package could test if the handler implements an interface with
-   method `Helper()`, and if so, invoke that method. This would need to be
-   implemented in several spots in `slog` codebase, and would introduce a little
-   overhead.
-
-Being that none of the above are available right now, we have to live
-with the incorrect callsite always being printed. If you also want to
-see the correct callsite alongside the incorrect one, you can do this:
+By default, log lines carry no callsite (writing through `t.Output()` adds none).
+If you want the real caller, enable `AddSource: true` on the handler:
 
 ```go
 func TestCaller(t *testing.T) {
@@ -203,11 +150,71 @@ func TestCaller(t *testing.T) {
 }
 ```
 
-Which produces (note the `source` attribute):
+Produces (note the correct `source` attribute — the actual call site, not slog's
+internals):
 
 ```text
 === RUN   TestCaller
-    logger.go:230: time=2023-04-01T11:21:49.896-06:00 level=INFO source=/Users/neilotoole/slogt/slogt_test.go:103 msg="Show me the real callsite"
+    time=2026-05-23T10:00:00.000-06:00 level=INFO source=.../slogt_test.go:118 msg="Show me the real callsite"
 ```
 
+## History
 
+`slogt` originally had a notable deficiency: every log line was prefixed with a
+**bogus callsite** pointing into `slog`'s internals (e.g. `logger.go:230`) rather
+than the real `log.Info()` call site. This was unavoidable — the only sink
+available was `t.Log(string)`, a function call rather than an `io.Writer`, so
+`slogt` had to buffer slog's output and forward it through `t.Log`, which then
+attributed each line to `slog`'s own internals (the frame that called `Handle`)
+rather than the real call site. `t.Helper()` could not mark enough frames to fix it.
+
+That limitation directly motivated the upstream Go proposal
+[golang/go#59928](https://github.com/golang/go/issues/59928), which was accepted
+and shipped in **Go 1.25** as
+[`testing.TB.Output()`](https://pkg.go.dev/testing#T.Output): an `io.Writer` that
+writes to the test log without prepending a source location. As of `v2.0.0`,
+slogt writes straight to `t.Output()`, so the bogus prefix is gone — and the real
+caller is available via `AddSource: true` (see [Showing the caller](#showing-the-caller)).
+
+> [!NOTE]
+> This deficiency is what motivated [golang/go#59928](https://github.com/golang/go/issues/59928).
+> The original issue (by [@earthboundkid](https://github.com/earthboundkid)):
+>
+> > In a test, you often want to mock out the logger. It would be nice to be able to
+> > call t.Slog() and get a log/slog logger that send output to t.Log() with the
+> > correct caller information.
+> >
+> > See https://github.com/neilotoole/slogt for an example of a third party library
+> > providing this functionality, but note that it cannot provide correct caller
+> > information:
+> >
+> > > Alas, given the available functionality on testing.T (i.e. the Helper method),
+> > > and how slog is implemented, there's no way to have the correct callsite printed.
+> >
+> > It seems like this needs to be done on the Go side to fix the callsite.
+
+## Changelog
+
+### v2.0.0 (2026-05-23)
+
+- **Breaking:** require Go 1.25 and route output through
+  [`testing.TB.Output()`](https://pkg.go.dev/testing#T.Output), eliminating the
+  bogus slog-internal callsite prefix (see [History](#history)).
+- **Breaking:** remove the exported `Bridge` type (an internal workaround that is
+  no longer needed). The module path is now `github.com/neilotoole/slogt/v2`.
+- **Breaking:** replace the mutable `Default` package var with the
+  concurrency-safe `SetDefault` function.
+- Drop the stale `golang.org/x/exp` dependency; test CI across Go 1.25.x and stable.
+
+### v1.1.0 (2023-08-12)
+
+- Require Go 1.21; switch from `golang.org/x/exp/slog` to the standard library
+  `log/slog`.
+
+### v1.0.1 (2023-05-31)
+
+- Update README examples for the newer `golang.org/x/exp/slog` API.
+
+### v1.0.0 (2023-04-03)
+
+- Initial release: bridge between `testing.T` and `golang.org/x/exp/slog`.
