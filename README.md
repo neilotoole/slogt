@@ -217,15 +217,15 @@ caller is available via `AddSource: true` (see [Showing the caller](#showing-the
   concurrency-safe `SetDefault` function.
 - Drop the stale `golang.org/x/exp` dependency; test CI across Go 1.25.x and stable.
 
-### v1.1.0 (2023-08-12)
+### [v1.1.0](https://github.com/neilotoole/slogt/releases/tag/v1.1.0) (2023-08-12)
 
 - Require Go 1.21; switch from `golang.org/x/exp/slog` to the standard library
   `log/slog`.
 
-### v1.0.1 (2023-05-31)
+### [v1.0.1](https://github.com/neilotoole/slogt/releases/tag/v1.0.1) (2023-05-31)
 
 - Update README examples for the newer `golang.org/x/exp/slog` API.
 
-### v1.0.0 (2023-04-03)
+### [v1.0.0](https://github.com/neilotoole/slogt/releases/tag/v1.0.0) (2023-04-03)
 
 - Initial release: bridge between `testing.T` and `golang.org/x/exp/slog`.
