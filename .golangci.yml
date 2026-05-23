@@ -1,0 +1,34 @@
+version: "2"
+
+# A deliberately strict-but-sane set for a small library: the standard linters
+# plus a broad selection of high-signal extras. Opinionated/noisy linters
+# (wsl, varnamelen, exhaustruct, ireturn, mnd, lll, depguard) are intentionally
+# left out.
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - copyloopvar
+    - errorlint
+    - gocheckcompilerdirectives
+    - gocritic
+    - gocyclo
+    - gosec
+    - misspell
+    - nakedret
+    - nilerr
+    - nolintlint
+    - perfsprint
+    - predeclared
+    - reassign
+    - revive
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
