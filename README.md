@@ -121,7 +121,11 @@ func init() {
 }
 ```
 
-You can exercise full control over the handler using `slogt.Factory()`.
+When `Text()` and `JSON()` aren't enough — a non-default level, `AddSource: true`,
+a custom `ReplaceAttr`, or a third-party handler — reach for `slogt.Factory()`.
+slogt calls your function with the test's writer (`t.Output()`), and you return
+any `slog.Handler` that writes to it. (Since v2 removed the exported `Bridge`
+type, `Factory` is _the_ way to plug in a custom handler.)
 
 ```go
 func TestSomething(t *testing.T) {

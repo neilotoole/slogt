@@ -71,8 +71,15 @@ func JSON() Option {
 	}
 }
 
-// Factory specifies a custom factory function for
-// creating the logger's underlying handler.
+// Factory configures the logger's handler via a custom constructor, for when
+// Text and JSON aren't enough: a non-default level, AddSource: true, a custom
+// ReplaceAttr, or a third-party slog.Handler. New calls fn with the test's
+// writer (t.Output()), and fn returns a handler that writes to w. This is the
+// extension point for anything the convenience options don't cover.
+//
+//	log := slogt.New(t, slogt.Factory(func(w io.Writer) slog.Handler {
+//		return slog.NewTextHandler(w, &slog.HandlerOptions{AddSource: true})
+//	}))
 func Factory(fn func(w io.Writer) slog.Handler) Option {
 	return func(c *config) {
 		c.newHandler = fn
