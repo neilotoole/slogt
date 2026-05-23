@@ -24,7 +24,7 @@ Produces:
 ```text
 === RUN   TestSlog_Ugly
     slogt_test.go:21: I am indented correctly
-time=2023-04-01T11:29:27.236-06:00 level=INFO msg="But I am not"
+time=2026-05-23T10:00:00.000-06:00 level=INFO msg="But I am not"
 ```
 
 Note the second line (produced via `slog`).
@@ -46,7 +46,6 @@ Produces:
     slogt_test.go:27: I am indented correctly
     time=2026-05-23T10:00:00.000-06:00 level=INFO msg="And so am I"
 ```
-
 
 ## Usage
 
